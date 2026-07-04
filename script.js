@@ -1,519 +1,350 @@
-// ===== STATE MANAGEMENT =====
-const state = {
-    currentDate: new Date(),
-    currentMonth: new Date().getMonth(),
-    currentYear: new Date().getFullYear(),
-    selectedDate: null,
-    cycleDay: 12,
-    totalCycleDays: 28,
-    periodDays: 5,
-    lastPeriodStart: null,
-    symptoms: [],
-    mood: null,
-    intensity: 3,
-    periodLog: {},
-    cycleHistory: []
-};
-
-// ===== DOM ELEMENTS =====
-const calendarGrid = document.getElementById('calendarGrid');
-const currentMonthEl = document.getElementById('currentMonth');
-const cycleDayEl = document.getElementById('cycleDay');
-const daysUntilPeriodEl = document.getElementById('daysUntilPeriod');
-const currentCycleDayEl = document.getElementById('currentCycleDay');
-const fertilityStatusEl = document.getElementById('fertilityStatus');
-
-// ===== SYMPTOMS DATA =====
-const symptoms = [
-    { id: 'cramps', icon: 'fa-solid fa-bolt', label: 'Cramps' },
-    { id: 'headache', icon: 'fa-solid fa-head-side-virus', label: 'Headache' },
-    { id: 'bloating', icon: 'fa-solid fa-circle-exclamation', label: 'Bloating' },
-    { id: 'fatigue', icon: 'fa-solid fa-bed', label: 'Fatigue' },
-    { id: 'mood_swings', icon: 'fa-solid fa-face-smile', label: 'Mood Swings' },
-    { id: 'acne', icon: 'fa-solid fa-face-frown', label: 'Acne' },
-    { id: 'back_pain', icon: 'fa-solid fa-spine', label: 'Back Pain' },
-    { id: 'nausea', icon: 'fa-solid fa-stomach', label: 'Nausea' },
-    { id: 'breast_tenderness', icon: 'fa-solid fa-heart-pulse', label: 'Breast Tenderness' },
-    { id: 'cravings', icon: 'fa-solid fa-utensils', label: 'Cravings' }
-];
-
-// ===== INITIALIZATION =====
+// ============================================
+// LOADING SCREEN
+// ============================================
 document.addEventListener('DOMContentLoaded', () => {
-    // Set default last period start to 12 days ago
-    const defaultDate = new Date();
-    defaultDate.setDate(defaultDate.getDate() - 12);
-    state.lastPeriodStart = defaultDate;
-    
-    // Set form default
-    document.getElementById('lastPeriodStart').value = formatDateInput(defaultDate);
-    document.getElementById('cycleLength').value = state.totalCycleDays;
-    document.getElementById('periodDuration').value = state.periodDays;
-    
-    renderCalendar();
-    updateDashboard();
-    renderSymptoms();
-    setupEventListeners();
-    initChart();
+    startLoading();
 });
 
-// ===== CALENDAR =====
-function renderCalendar() {
-    const month = state.currentMonth;
-    const year = state.currentYear;
+function startLoading() {
+    const loadingScreen = document.getElementById('loadingScreen');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
     
-    currentMonthEl.textContent = new Date(year, month).toLocaleString('default', { 
-        month: 'long', 
-        year: 'numeric' 
-    });
-    
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const today = new Date();
-    
-    let html = '';
-    
-    // Day names
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    dayNames.forEach(name => {
-        html += `<div class="day-name">${name}</div>`;
-    });
-    
-    // Empty cells
-    for (let i = 0; i < firstDay; i++) {
-        html += `<div class="day other-month"></div>`;
-    }
-    
-    // Days
-    const periodDays = getPeriodDays();
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(year, month, day);
-        const dateString = date.toDateString();
-        const isToday = dateString === today.toDateString();
-        const isPeriod = periodDays.includes(day);
-        const isFertile = isFertileDay(day);
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += Math.random() * 8 + 2;
         
-        let classes = 'day';
-        if (isToday) classes += ' today';
-        if (isPeriod) classes += ' period';
-        if (isFertile) classes += ' fertile';
-        if (state.selectedDate && dateString === state.selectedDate.toDateString()) {
-            classes += ' selected';
+        if (progress >= 100) {
+            progress = 100;
+            clearInterval(interval);
+            
+            // Wait a moment then hide loading screen
+            setTimeout(() => {
+                loadingScreen.classList.add('fade-out');
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    document.getElementById('mainApp').classList.remove('hidden');
+                }, 800);
+            }, 500);
         }
         
-        html += `<div class="${classes}" data-day="${day}" data-month="${month}" data-year="${year}" onclick="selectDay(${day}, ${month}, ${year})">
-            ${day}
-        </div>`;
-    }
-    
-    calendarGrid.innerHTML = html;
+        progressBar.style.width = progress + '%';
+        progressText.textContent = Math.round(progress) + '%';
+    }, 200);
 }
 
-function getPeriodDays() {
-    if (!state.lastPeriodStart) return [];
-    
-    const startDate = new Date(state.lastPeriodStart);
-    const days = [];
-    
-    for (let i = 0; i < state.periodDays; i++) {
-        const d = new Date(startDate);
-        d.setDate(d.getDate() + i);
-        if (d.getMonth() === state.currentMonth && d.getFullYear() === state.currentYear) {
-            days.push(d.getDate());
-        }
-    }
-    return days;
+// ============================================
+// RANGE INPUT HANDLERS
+// ============================================
+function updateRangeValue(inputId, displayId) {
+    const input = document.getElementById(inputId);
+    const display = document.getElementById(displayId);
+    display.textContent = input.value;
 }
 
-function isFertileDay(day) {
-    // Simple fertile window calculation (assuming ovulation around day 14)
-    const cycleDay = calculateCycleDay(day);
-    return cycleDay >= 12 && cycleDay <= 16;
-}
-
-function calculateCycleDay(day) {
-    if (!state.lastPeriodStart) return 1;
+// ============================================
+// CYCLE CALCULATION
+// ============================================
+function calculatePeriod(event) {
+    event.preventDefault();
     
-    const start = new Date(state.lastPeriodStart);
-    const current = new Date(state.currentYear, state.currentMonth, day);
-    const diffDays = Math.floor((current - start) / (1000 * 60 * 60 * 24));
-    return diffDays + 1;
-}
-
-function selectDay(day, month, year) {
-    state.selectedDate = new Date(year, month, day);
-    renderCalendar();
-    showToast(`Selected ${new Date(year, month, day).toLocaleDateString()}`);
-}
-
-function changeMonth(delta) {
-    state.currentMonth += delta;
-    if (state.currentMonth < 0) {
-        state.currentMonth = 11;
-        state.currentYear--;
-    } else if (state.currentMonth > 11) {
-        state.currentMonth = 0;
-        state.currentYear++;
-    }
-    renderCalendar();
-}
-
-// ===== DASHBOARD =====
-function updateDashboard() {
-    const cycleDay = state.cycleDay;
-    cycleDayEl.textContent = cycleDay;
-    currentCycleDayEl.textContent = cycleDay;
+    // Get form values
+    const lastPeriodDate = document.getElementById('lastPeriodDate').value;
+    const cycleLength = parseInt(document.getElementById('cycleLength').value);
+    const periodDuration = parseInt(document.getElementById('periodDuration').value);
     
-    // Update phase
-    const phase = getPhase(cycleDay);
-    document.getElementById('phaseName').textContent = phase;
-    
-    // Update days until period
-    const daysUntil = state.totalCycleDays - cycleDay;
-    daysUntilPeriodEl.textContent = daysUntil > 0 ? daysUntil : 0;
-    
-    // Update fertility status
-    if (cycleDay >= 12 && cycleDay <= 16) {
-        fertilityStatusEl.textContent = 'High';
-        fertilityStatusEl.style.color = '#9B6BFF';
-    } else if (cycleDay >= 8 && cycleDay <= 11) {
-        fertilityStatusEl.textContent = 'Medium';
-        fertilityStatusEl.style.color = '#FFB347';
-    } else {
-        fertilityStatusEl.textContent = 'Low';
-        fertilityStatusEl.style.color = '#6B6B6B';
-    }
-    
-    // Update progress ring
-    const progress = (cycleDay / state.totalCycleDays) * 100;
-    document.querySelector('.progress-ring-circle').style.setProperty('--progress', `${progress}%`);
-}
-
-function getPhase(day) {
-    if (day <= 5) return 'Menstruation';
-    if (day <= 11) return 'Follicular Phase';
-    if (day <= 16) return 'Ovulation';
-    if (day <= 28) return 'Luteal Phase';
-    return 'Menstruation';
-}
-
-// ===== SYMPTOMS =====
-function renderSymptoms() {
-    const grid = document.getElementById('symptomGrid');
-    let html = '';
-    
-    symptoms.forEach(symptom => {
-        const isActive = state.symptoms.includes(symptom.id);
-        html += `
-            <button class="symptom-btn ${isActive ? 'active' : ''}" onclick="toggleSymptom('${symptom.id}')">
-                <i class="${symptom.icon}"></i>
-                <span>${symptom.label}</span>
-            </button>
-        `;
-    });
-    
-    grid.innerHTML = html;
-}
-
-function toggleSymptom(id) {
-    const index = state.symptoms.indexOf(id);
-    if (index > -1) {
-        state.symptoms.splice(index, 1);
-    } else {
-        state.symptoms.push(id);
-    }
-    renderSymptoms();
-}
-
-// ===== MOOD TRACKER =====
-document.addEventListener('DOMContentLoaded', () => {
-    const moodBtns = document.querySelectorAll('.mood-btn');
-    moodBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            moodBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            state.mood = this.dataset.mood;
-        });
-    });
-    
-    const intensitySlider = document.getElementById('intensitySlider');
-    intensitySlider.addEventListener('input', function() {
-        document.getElementById('intensityLabel').textContent = this.value;
-        state.intensity = parseInt(this.value);
-    });
-});
-
-function saveDailyLog() {
-    if (!state.mood) {
-        showToast('Please select your mood first!', 'warning');
+    if (!lastPeriodDate) {
+        showNotification('Please select your last period date', 'warning');
         return;
     }
     
-    const log = {
-        date: new Date().toISOString().split('T')[0],
-        mood: state.mood,
-        intensity: state.intensity,
-        symptoms: [...state.symptoms]
-    };
+    // Calculate
+    const lastPeriod = new Date(lastPeriodDate);
+    const today = new Date();
     
-    state.periodLog[log.date] = log;
-    showToast('Daily log saved successfully! 🌸', 'success');
+    // Calculate days since last period
+    const daysSinceLastPeriod = Math.floor((today - lastPeriod) / (1000 * 60 * 60 * 24));
     
-    // Reset
-    state.symptoms = [];
-    state.mood = null;
-    document.getElementById('intensitySlider').value = 3;
-    document.getElementById('intensityLabel').textContent = '3';
-    document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('active'));
-    renderSymptoms();
-}
-
-// ===== INSIGHTS =====
-function initChart() {
-    const ctx = document.getElementById('cycleChart').getContext('2d');
+    // Calculate current cycle day
+    let currentDay = (daysSinceLastPeriod % cycleLength) + 1;
+    if (currentDay < 1) currentDay = 1;
+    if (currentDay > cycleLength) currentDay = cycleLength;
     
-    // Generate sample cycle data
-    const labels = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
-    const data = [28, 27, 29, 28, 27, 28];
+    // Calculate next period date
+    const nextPeriod = new Date(lastPeriod);
+    nextPeriod.setDate(nextPeriod.getDate() + cycleLength);
     
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Cycle Length (days)',
-                data: data,
-                borderColor: '#FF6B9D',
-                backgroundColor: 'rgba(255, 107, 157, 0.1)',
-                borderWidth: 3,
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#FF6B9D',
-                pointBorderColor: '#FFF',
-                pointBorderWidth: 2,
-                pointRadius: 6,
-                pointHoverRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: false,
-                    min: 25,
-                    max: 32,
-                    grid: {
-                        color: 'rgba(0,0,0,0.05)'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    }
-                }
-            }
-        }
+    // Calculate days until next period
+    const daysUntilNext = Math.max(0, Math.floor((nextPeriod - today) / (1000 * 60 * 60 * 24)));
+    
+    // Calculate fertility window
+    const ovulationDay = Math.floor(cycleLength / 2);
+    const fertileStart = ovulationDay - 3;
+    const fertileEnd = ovulationDay + 3;
+    
+    // Determine phase
+    const phase = getPhase(currentDay, cycleLength);
+    const phaseEmoji = getPhaseEmoji(phase);
+    const phaseDescription = getPhaseDescription(phase);
+    
+    // Display results
+    displayResults({
+        currentDay,
+        nextPeriod: nextPeriod.toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            month: 'short', 
+            day: 'numeric', 
+            year: 'numeric' 
+        }),
+        daysUntilNext,
+        fertileWindow: `Days ${fertileStart}-${fertileEnd}`,
+        phase,
+        phaseEmoji,
+        phaseDescription,
+        cycleLength,
+        progress: (currentDay / cycleLength) * 100
     });
 }
 
-// ===== PERIOD LOGGING =====
-function logPeriod() {
-    const today = new Date();
-    state.lastPeriodStart = new Date(today);
-    state.cycleDay = 1;
-    
-    document.getElementById('lastPeriodStart').value = formatDateInput(today);
-    updateDashboard();
-    renderCalendar();
-    
-    showToast('Period logged! 🌸 Starting new cycle', 'success');
-    
-    // Celebrate with animation
-    createCelebration();
+// ============================================
+// PHASE HELPERS
+// ============================================
+function getPhase(day, cycleLength) {
+    if (day <= 5) return 'Menstruation';
+    if (day <= 11) return 'Follicular Phase';
+    if (day <= Math.floor(cycleLength / 2) + 2) return 'Ovulation';
+    return 'Luteal Phase';
 }
 
+function getPhaseEmoji(phase) {
+    const map = {
+        'Menstruation': '🩸',
+        'Follicular Phase': '🌱',
+        'Ovulation': '🥚',
+        'Luteal Phase': '🌙'
+    };
+    return map[phase] || '🌸';
+}
+
+function getPhaseDescription(phase) {
+    const map = {
+        'Menstruation': 'Your period is here. Rest and listen to your body.',
+        'Follicular Phase': 'Energy is rising. Great time for new beginnings!',
+        'Ovulation': 'Peak fertility. You may feel more energetic and social.',
+        'Luteal Phase': 'Wind down and practice self-care. PMS symptoms may appear.'
+    };
+    return map[phase] || 'Your body is going through its natural cycle.';
+}
+
+// ============================================
+// DISPLAY RESULTS
+// ============================================
+function displayResults(data) {
+    // Show results section
+    const resultsSection = document.getElementById('resultsSection');
+    resultsSection.classList.remove('hidden');
+    
+    // Smooth scroll to results
+    resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    // Populate data with animation delay
+    setTimeout(() => {
+        document.getElementById('currentDay').textContent = `Day ${data.currentDay}`;
+        document.getElementById('nextPeriod').textContent = data.nextPeriod;
+        document.getElementById('daysUntil').textContent = `${data.daysUntilNext} days`;
+        document.getElementById('fertilityWindow').textContent = data.fertileWindow;
+        
+        document.getElementById('phaseName').textContent = data.phase;
+        document.querySelector('.phase-icon').textContent = data.phaseEmoji;
+        document.getElementById('phaseDescription').textContent = data.phaseDescription;
+        
+        // Update progress
+        const progressFill = document.getElementById('cycleProgressFill');
+        progressFill.style.width = data.progress + '%';
+        document.getElementById('progressPercentage').textContent = Math.round(data.progress) + '%';
+        document.getElementById('totalCycleDays').textContent = `${data.cycleLength} days`;
+        
+        // Celebration animation for certain phases
+        if (data.phase === 'Ovulation' || data.daysUntilNext <= 3) {
+            createCelebration();
+        }
+    }, 300);
+}
+
+// ============================================
+// CELEBRATION ANIMATION
+// ============================================
 function createCelebration() {
-    const colors = ['#FF6B9D', '#9B6BFF', '#FF6B6B', '#6BFF9B', '#FFD93D'];
+    const emojis = ['🌸', '✨', '💖', '🌺', '💫', '🎉', '🌷', '💗'];
     const container = document.body;
     
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 20; i++) {
         setTimeout(() => {
-            const emoji = document.createElement('div');
-            emoji.textContent = ['🌸', '✨', '💖', '🌺', '💫', '🎉'][Math.floor(Math.random() * 6)];
-            emoji.style.cssText = `
+            const el = document.createElement('div');
+            el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            el.style.cssText = `
                 position: fixed;
                 left: ${Math.random() * 100}%;
                 top: -20px;
-                font-size: ${Math.random() * 30 + 20}px;
+                font-size: ${Math.random() * 25 + 20}px;
                 animation: confettiFall ${Math.random() * 2 + 2}s ease-in forwards;
                 pointer-events: none;
                 z-index: 9999;
             `;
-            container.appendChild(emoji);
+            container.appendChild(el);
             
-            setTimeout(() => emoji.remove(), 3000);
-        }, i * 50);
+            setTimeout(() => el.remove(), 3500);
+        }, i * 80);
     }
 }
 
-// ===== PROFILE =====
-function saveProfile() {
-    const cycleLength = parseInt(document.getElementById('cycleLength').value);
-    const periodDuration = parseInt(document.getElementById('periodDuration').value);
-    const lastPeriodStart = document.getElementById('lastPeriodStart').value;
+// ============================================
+// RESET CALCULATOR
+// ============================================
+function resetCalculator() {
+    document.getElementById('resultsSection').classList.add('hidden');
+    document.getElementById('periodForm').reset();
+    document.getElementById('cycleLengthValue').textContent = '28';
+    document.getElementById('periodDurationValue').textContent = '5';
     
-    if (!cycleLength || !periodDuration || !lastPeriodStart) {
-        showToast('Please fill all fields', 'warning');
-        return;
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    showNotification('Ready to calculate again! 🌸', 'info');
+}
+
+// ============================================
+// SHARE RESULTS
+// ============================================
+function shareResults() {
+    const currentDay = document.getElementById('currentDay').textContent;
+    const nextPeriod = document.getElementById('nextPeriod').textContent;
+    const daysUntil = document.getElementById('daysUntil').textContent;
+    
+    const shareText = `🌸 My Period Tracker Results:
+• ${currentDay}
+• Next Period: ${nextPeriod}
+• ${daysUntil} until period
+• Calculated with PeriodCalc 🌸`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'My Period Tracker Results',
+            text: shareText,
+        }).catch(() => {});
+    } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(shareText).then(() => {
+            showNotification('Results copied to clipboard! 📋', 'success');
+        }).catch(() => {
+            // If clipboard fails, show alert
+            alert(shareText);
+        });
     }
-    
-    state.totalCycleDays = cycleLength;
-    state.periodDays = periodDuration;
-    state.lastPeriodStart = new Date(lastPeriodStart);
-    
-    // Calculate cycle day
-    const diffDays = Math.floor((new Date() - state.lastPeriodStart) / (1000 * 60 * 60 * 24));
-    state.cycleDay = (diffDays % cycleLength) + 1;
-    
-    updateDashboard();
-    renderCalendar();
-    showToast('Profile saved successfully! 🌸', 'success');
 }
 
-function formatDateInput(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-// ===== WELLNESS FEATURES =====
-function startMeditation() {
-    showToast('🧘 Starting guided meditation...', 'info');
-    // Add meditation animation
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
+// ============================================
+// NOTIFICATION SYSTEM
+// ============================================
+function showNotification(message, type = 'success') {
+    // Remove existing notification
+    const existing = document.querySelector('.notification-toast');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = 'notification-toast';
+    toast.style.cssText = `
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.7);
-        z-index: 9998;
+        bottom: 30px;
+        right: 30px;
+        background: ${type === 'success' ? '#2D2D44' : type === 'warning' ? '#FFB347' : '#9B6BFF'};
+        color: white;
+        padding: 16px 28px;
+        border-radius: 14px;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         display: flex;
         align-items: center;
-        justify-content: center;
-        flex-direction: column;
+        gap: 12px;
+        z-index: 9999;
+        animation: slideInRight 0.5s ease;
+        max-width: 400px;
     `;
-    overlay.innerHTML = `
-        <div style="font-size: 4rem; animation: pulse 1.5s ease-in-out infinite;">🧘</div>
-        <h2 style="color: white; margin-top: 20px;">Take a deep breath...</h2>
-        <div style="color: rgba(255,255,255,0.8); margin-top: 10px;">5-minute guided meditation</div>
-    `;
-    document.body.appendChild(overlay);
+    
+    const icon = type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+    toast.innerHTML = `${icon} ${message}`;
+    
+    document.body.appendChild(toast);
     
     setTimeout(() => {
-        overlay.remove();
-        showToast('Meditation complete! Feel refreshed? 🌸', 'success');
-    }, 5000);
-}
-
-// ===== TAB NAVIGATION =====
-document.addEventListener('DOMContentLoaded', () => {
-    const navBtns = document.querySelectorAll('.nav-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
-    
-    navBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            navBtns.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            
-            const tabId = this.dataset.tab;
-            tabContents.forEach(content => {
-                content.classList.remove('active');
-                if (content.id === tabId) {
-                    content.classList.add('active');
-                }
-            });
-        });
-    });
-});
-
-// ===== TOAST NOTIFICATIONS =====
-function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    const toastMessage = document.getElementById('toastMessage');
-    const icon = toast.querySelector('i');
-    
-    toastMessage.textContent = message;
-    
-    // Set icon and color based on type
-    if (type === 'success') {
-        icon.className = 'fas fa-check-circle';
-        icon.style.color = '#6BFF9B';
-    } else if (type === 'warning') {
-        icon.className = 'fas fa-exclamation-circle';
-        icon.style.color = '#FFD93D';
-    } else if (type === 'info') {
-        icon.className = 'fas fa-info-circle';
-        icon.style.color = '#9B6BFF';
-    }
-    
-    toast.classList.add('show');
-    
-    setTimeout(() => {
-        toast.classList.remove('show');
+        toast.style.animation = 'slideOutRight 0.5s ease forwards';
+        setTimeout(() => toast.remove(), 500);
     }, 3000);
 }
 
-// ===== ADDITIONAL ANIMATIONS =====
-// Add confetti animation keyframes dynamically
+// Add notification animations
 const style = document.createElement('style');
 style.textContent = `
+    @keyframes slideInRight {
+        from { opacity: 0; transform: translateX(100px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes slideOutRight {
+        from { opacity: 1; transform: translateX(0); }
+        to { opacity: 0; transform: translateX(100px); }
+    }
     @keyframes confettiFall {
-        0% {
-            transform: translateY(0) rotate(0deg);
-            opacity: 1;
-        }
-        100% {
-            transform: translateY(100vh) rotate(720deg);
-            opacity: 0;
-        }
+        0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
     }
 `;
 document.head.appendChild(style);
 
-// ===== KEYBOARD SHORTCUTS =====
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft') changeMonth(-1);
-    if (e.key === 'ArrowRight') changeMonth(1);
-    if (e.key === 'p' || e.key === 'P') logPeriod();
-    if (e.key === 's' || e.key === 'S') saveDailyLog();
-});
-
-// ===== PWA SUPPORT =====
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('SW registered:', reg))
-        .catch(err => console.log('SW registration failed:', err));
+// ============================================
+// THEME TOGGLE
+// ============================================
+function toggleTheme() {
+    document.body.classList.toggle('dark-theme');
+    const icon = document.querySelector('.theme-toggle i');
+    if (document.body.classList.contains('dark-theme')) {
+        icon.className = 'fas fa-sun';
+    } else {
+        icon.className = 'fas fa-moon';
+    }
 }
 
-// ===== EXPORT FOR GLOBAL ACCESS =====
-window.logPeriod = logPeriod;
-window.changeMonth = changeMonth;
-window.selectDay = selectDay;
-window.toggleSymptom = toggleSymptom;
-window.saveDailyLog = saveDailyLog;
-window.saveProfile = saveProfile;
-window.startMeditation = startMeditation;
-window.showToast = showToast;
+// ============================================
+// KEYBOARD SHORTCUTS
+// ============================================
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && document.activeElement.tagName !== 'INPUT') {
+        document.getElementById('periodForm').dispatchEvent(new Event('submit'));
+    }
+    if (e.key === 'r' || e.key === 'R') {
+        resetCalculator();
+    }
+});
 
-console.log('🌸 Period Tracker App Loaded Successfully!');
-console.log('📅 Current Cycle Day:', state.cycleDay);
-console.log('💡 Tips: Use arrow keys for calendar navigation');
+// ============================================
+// SET DEFAULT DATE
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Set default date to 28 days ago (typical cycle)
+    const defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() - 28);
+    document.getElementById('lastPeriodDate').value = defaultDate.toISOString().split('T')[0];
+});
+
+// ============================================
+// EXPOSE FUNCTIONS GLOBALLY
+// ============================================
+window.updateRangeValue = updateRangeValue;
+window.calculatePeriod = calculatePeriod;
+window.resetCalculator = resetCalculator;
+window.shareResults = shareResults;
+window.toggleTheme = toggleTheme;
+
+console.log('🌸 Period Calculator App Loaded!');
+console.log('📝 Enter your cycle details and get instant results.');
+console.log('⌨️ Press R to reset, Enter to calculate.');
