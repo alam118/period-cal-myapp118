@@ -1,250 +1,269 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌸 Period Tracker - Your Wellness Companion</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🌸 Period Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="nav-logo">
-                <i class="fas fa-flower"></i>
-                <span>PeriodTracker</span>
+
+    <!-- ============================================ -->
+    <!-- LOADING SCREEN -->
+    <!-- ============================================ -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-container">
+            <!-- Flower Logo Animation -->
+            <div class="flower-loader">
+                <div class="petal petal-1"></div>
+                <div class="petal petal-2"></div>
+                <div class="petal petal-3"></div>
+                <div class="petal petal-4"></div>
+                <div class="petal petal-5"></div>
+                <div class="petal petal-6"></div>
+                <div class="center-dot"></div>
             </div>
-            <div class="nav-links">
-                <button class="nav-btn active" data-tab="dashboard">
-                    <i class="fas fa-home"></i>
-                    <span>Home</span>
-                </button>
-                <button class="nav-btn" data-tab="tracker">
-                    <i class="fas fa-calendar-check"></i>
-                    <span>Tracker</span>
-                </button>
-                <button class="nav-btn" data-tab="insights">
-                    <i class="fas fa-chart-line"></i>
-                    <span>Insights</span>
-                </button>
-                <button class="nav-btn" data-tab="wellness">
-                    <i class="fas fa-heart"></i>
-                    <span>Wellness</span>
-                </button>
-                <button class="nav-btn" data-tab="profile">
-                    <i class="fas fa-user"></i>
-                    <span>Profile</span>
-                </button>
+            
+            <!-- Loading Text -->
+            <h2 class="loading-title">Period Calculator</h2>
+            <p class="loading-subtitle">Loading your wellness companion...</p>
+            
+            <!-- Progress Bar -->
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <span class="progress-text" id="progressText">0%</span>
+            
+            <!-- Floating Hearts -->
+            <div class="floating-hearts">
+                <span class="heart">🌸</span>
+                <span class="heart">💖</span>
+                <span class="heart">🌺</span>
+                <span class="heart">✨</span>
             </div>
         </div>
-    </nav>
+    </div>
 
-    <!-- Main Container -->
-    <div class="main-container">
-        <!-- Dashboard Tab -->
-        <div id="dashboard" class="tab-content active">
-            <!-- Welcome Section -->
-            <div class="welcome-section">
-                <div class="welcome-text">
-                    <h1>Hello, 🌸</h1>
-                    <p>Your cycle day <span id="cycleDay">12</span> • <span id="phaseName">Ovulation</span></p>
+    <!-- ============================================ -->
+    <!-- MAIN APP -->
+    <!-- ============================================ -->
+    <div id="mainApp" class="main-app hidden">
+        
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-flower"></i>
+                    <span>PeriodCalc</span>
                 </div>
-                <div class="quick-add">
-                    <button class="btn-primary" onclick="logPeriod()">
-                        <i class="fas fa-plus"></i> Log Period
-                    </button>
-                </div>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
             </div>
+        </header>
 
-            <!-- Cycle Progress Ring -->
-            <div class="cycle-progress">
-                <div class="progress-ring-container">
-                    <div class="progress-ring">
-                        <div class="progress-ring-circle" id="cycleProgress"></div>
-                        <div class="progress-text">
-                            <span class="days-count" id="daysUntilPeriod">8</span>
-                            <span class="days-label">days until period</span>
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>🌸 Your Period Calculator</h1>
+            <p>Track your cycle, predict your next period, and stay healthy</p>
+        </section>
+
+        <!-- Calculator Form -->
+        <section class="calculator-section">
+            <div class="calculator-card">
+                <h2><i class="fas fa-calculator"></i> Calculate Your Cycle</h2>
+                
+                <form id="periodForm" onsubmit="calculatePeriod(event)">
+                    <!-- Step 1: Last Period Date -->
+                    <div class="form-group">
+                        <label for="lastPeriodDate">
+                            <i class="fas fa-calendar-alt"></i> 
+                            First day of your last period
+                        </label>
+                        <input 
+                            type="date" 
+                            id="lastPeriodDate" 
+                            required 
+                            class="form-input"
+                        />
+                        <small class="input-hint">When did your last period start?</small>
+                    </div>
+
+                    <!-- Step 2: Cycle Length -->
+                    <div class="form-group">
+                        <label for="cycleLength">
+                            <i class="fas fa-arrows-alt-h"></i> 
+                            Average cycle length (days)
+                        </label>
+                        <div class="range-input-group">
+                            <input 
+                                type="range" 
+                                id="cycleLength" 
+                                min="21" 
+                                max="35" 
+                                value="28" 
+                                step="1"
+                                oninput="updateRangeValue('cycleLength', 'cycleLengthValue')"
+                            />
+                            <span class="range-value" id="cycleLengthValue">28</span>
+                        </div>
+                        <small class="input-hint">Most cycles are 21-35 days</small>
+                    </div>
+
+                    <!-- Step 3: Period Duration -->
+                    <div class="form-group">
+                        <label for="periodDuration">
+                            <i class="fas fa-clock"></i> 
+                            How long does your period last?
+                        </label>
+                        <div class="range-input-group">
+                            <input 
+                                type="range" 
+                                id="periodDuration" 
+                                min="3" 
+                                max="7" 
+                                value="5" 
+                                step="1"
+                                oninput="updateRangeValue('periodDuration', 'periodDurationValue')"
+                            />
+                            <span class="range-value" id="periodDurationValue">5</span>
+                        </div>
+                        <small class="input-hint">Typical period lasts 3-7 days</small>
+                    </div>
+
+                    <!-- Calculate Button -->
+                    <button type="submit" class="btn-calculate">
+                        <i class="fas fa-magic"></i> 
+                        Calculate My Cycle
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="resultsSection" class="results-section hidden">
+            <div class="results-card">
+                <h2><i class="fas fa-chart-pie"></i> Your Cycle Results</h2>
+                
+                <!-- Result Grid -->
+                <div class="results-grid">
+                    <div class="result-item" style="--delay: 0.1s">
+                        <div class="result-icon" style="background: #FF6B9D;">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="result-content">
+                            <span class="result-label">Current Cycle Day</span>
+                            <strong class="result-value" id="currentDay">--</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="result-item" style="--delay: 0.2s">
+                        <div class="result-icon" style="background: #9B6BFF;">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="result-content">
+                            <span class="result-label">Next Period</span>
+                            <strong class="result-value" id="nextPeriod">--</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="result-item" style="--delay: 0.3s">
+                        <div class="result-icon" style="background: #6BFF9B;">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="result-content">
+                            <span class="result-label">Days Until Period</span>
+                            <strong class="result-value" id="daysUntil">--</strong>
+                        </div>
+                    </div>
+                    
+                    <div class="result-item" style="--delay: 0.4s">
+                        <div class="result-icon" style="background: #FFB347;">
+                            <i class="fas fa-baby"></i>
+                        </div>
+                        <div class="result-content">
+                            <span class="result-label">Fertility Window</span>
+                            <strong class="result-value" id="fertilityWindow">--</strong>
                         </div>
                     </div>
                 </div>
-                <div class="cycle-stats">
-                    <div class="stat-item">
-                        <i class="fas fa-calendar-day"></i>
-                        <span>Cycle Day</span>
-                        <strong id="currentCycleDay">12</strong>
-                    </div>
-                    <div class="stat-item">
-                        <i class="fas fa-clock"></i>
-                        <span>Avg Cycle</span>
-                        <strong id="avgCycle">28</strong>
-                    </div>
-                    <div class="stat-item">
-                        <i class="fas fa-baby"></i>
-                        <span>Fertility</span>
-                        <strong id="fertilityStatus">High</strong>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Calendar -->
-            <div class="calendar-section">
-                <div class="calendar-header">
-                    <button class="btn-icon" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
-                    <h3 id="currentMonth">January 2026</h3>
-                    <button class="btn-icon" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
-                </div>
-                <div class="calendar-grid" id="calendarGrid">
-                    <!-- Calendar will be rendered by JavaScript -->
-                </div>
-            </div>
-
-            <!-- Today's Tips -->
-            <div class="tips-section">
-                <h3><i class="fas fa-lightbulb"></i> Today's Wellness Tips</h3>
-                <div class="tips-carousel" id="tipsCarousel">
-                    <div class="tip-card">
-                        <i class="fas fa-leaf"></i>
-                        <p>Stay hydrated! Drink 8 glasses of water today.</p>
+                <!-- Phase Indicator -->
+                <div class="phase-indicator">
+                    <h3>🌸 Current Phase</h3>
+                    <div class="phase-display" id="phaseDisplay">
+                        <span class="phase-icon">🌙</span>
+                        <span class="phase-name" id="phaseName">Calculating...</span>
                     </div>
-                    <div class="tip-card">
-                        <i class="fas fa-spa"></i>
-                        <p>Practice deep breathing for 5 minutes.</p>
-                    </div>
-                    <div class="tip-card">
-                        <i class="fas fa-walking"></i>
-                        <p>Take a 15-minute walk in nature.</p>
+                    <div class="phase-description" id="phaseDescription">
+                        Loading cycle information...
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Tracker Tab -->
-        <div id="tracker" class="tab-content">
-            <h2><i class="fas fa-calendar-check"></i> Symptom Tracker</h2>
-            
-            <div class="symptom-grid" id="symptomGrid">
-                <!-- Symptoms rendered by JavaScript -->
-            </div>
-
-            <div class="mood-tracker">
-                <h3>How are you feeling?</h3>
-                <div class="mood-emojis" id="moodEmojis">
-                    <button class="mood-btn" data-mood="😊">😊</button>
-                    <button class="mood-btn" data-mood="😐">😐</button>
-                    <button class="mood-btn" data-mood="😢">😢</button>
-                    <button class="mood-btn" data-mood="😡">😡</button>
-                    <button class="mood-btn" data-mood="😴">😴</button>
-                </div>
-                <div class="mood-intensity">
-                    <label>Intensity: <span id="intensityLabel">3</span></label>
-                    <input type="range" min="1" max="5" value="3" id="intensitySlider">
-                </div>
-                <button class="btn-primary" onclick="saveDailyLog()">
-                    <i class="fas fa-save"></i> Save Today's Log
-                </button>
-            </div>
-        </div>
-
-        <!-- Insights Tab -->
-        <div id="insights" class="tab-content">
-            <h2><i class="fas fa-chart-line"></i> Cycle Insights</h2>
-            
-            <div class="insight-cards">
-                <div class="insight-card">
-                    <i class="fas fa-chart-bar"></i>
-                    <h4>Cycle Length</h4>
-                    <p id="cycleLengthInsight">28 days</p>
-                    <small>Last 3 months average</small>
-                </div>
-                <div class="insight-card">
-                    <i class="fas fa-calendar-alt"></i>
-                    <h4>Next Period</h4>
-                    <p id="nextPeriodInsight">January 14, 2026</p>
-                    <small>8 days from now</small>
-                </div>
-                <div class="insight-card">
-                    <i class="fas fa-heartbeat"></i>
-                    <h4>Symptom Pattern</h4>
-                    <p id="symptomPattern">Mild cramps common</p>
-                    <small>Days 1-3 of cycle</small>
-                </div>
-            </div>
-
-            <div class="chart-container">
-                <canvas id="cycleChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Wellness Tab -->
-        <div id="wellness" class="tab-content">
-            <h2><i class="fas fa-heart"></i> Wellness Hub</h2>
-            
-            <div class="wellness-grid">
-                <div class="wellness-card" onclick="startMeditation()">
-                    <i class="fas fa-spa"></i>
-                    <h4>Meditation</h4>
-                    <p>5-min guided session</p>
-                    <button class="btn-secondary">Start</button>
-                </div>
-                <div class="wellness-card">
-                    <i class="fas fa-apple-alt"></i>
-                    <h4>Nutrition</h4>
-                    <p>Cycle-friendly recipes</p>
-                    <button class="btn-secondary">View</button>
-                </div>
-                <div class="wellness-card">
-                    <i class="fas fa-dumbbell"></i>
-                    <h4>Exercise</h4>
-                    <p>Phase-specific workouts</p>
-                    <button class="btn-secondary">Browse</button>
-                </div>
-                <div class="wellness-card">
-                    <i class="fas fa-moon"></i>
-                    <h4>Sleep</h4>
-                    <p>Track sleep quality</p>
-                    <button class="btn-secondary">Log</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Profile Tab -->
-        <div id="profile" class="tab-content">
-            <h2><i class="fas fa-user"></i> Profile Settings</h2>
-            
-            <div class="profile-card">
-                <div class="profile-avatar">
-                    <i class="fas fa-user-circle"></i>
-                </div>
-                <div class="profile-form">
-                    <div class="form-group">
-                        <label>Cycle Length (days)</label>
-                        <input type="number" id="cycleLength" value="28" min="21" max="35">
+                <!-- Cycle Progress -->
+                <div class="cycle-progress-section">
+                    <h3>📊 Cycle Progress</h3>
+                    <div class="cycle-progress-bar">
+                        <div class="cycle-progress-fill" id="cycleProgressFill" style="width: 0%"></div>
                     </div>
-                    <div class="form-group">
-                        <label>Period Duration (days)</label>
-                        <input type="number" id="periodDuration" value="5" min="3" max="7">
+                    <div class="cycle-progress-labels">
+                        <span>Day 1</span>
+                        <span id="progressPercentage">0%</span>
+                        <span id="totalCycleDays">28 days</span>
                     </div>
-                    <div class="form-group">
-                        <label>Last Period Start</label>
-                        <input type="date" id="lastPeriodStart">
-                    </div>
-                    <button class="btn-primary" onclick="saveProfile()">
-                        <i class="fas fa-save"></i> Save Settings
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="result-actions">
+                    <button class="btn-secondary" onclick="resetCalculator()">
+                        <i class="fas fa-redo"></i> Calculate Again
+                    </button>
+                    <button class="btn-primary" onclick="shareResults()">
+                        <i class="fas fa-share-alt"></i> Share Results
                     </button>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- Tips Section -->
+        <section class="tips-section">
+            <h2><i class="fas fa-lightbulb"></i> Wellness Tips</h2>
+            <div class="tips-grid" id="tipsGrid">
+                <div class="tip-card">
+                    <i class="fas fa-tint" style="color: #FF6B9D;"></i>
+                    <h4>Stay Hydrated</h4>
+                    <p>Drink at least 8 glasses of water daily</p>
+                </div>
+                <div class="tip-card">
+                    <i class="fas fa-bed" style="color: #9B6BFF;"></i>
+                    <h4>Quality Sleep</h4>
+                    <p>Aim for 7-8 hours of restful sleep</p>
+                </div>
+                <div class="tip-card">
+                    <i class="fas fa-walking" style="color: #6BFF9B;"></i>
+                    <h4>Light Exercise</h4>
+                    <p>15-20 minutes of gentle movement daily</p>
+                </div>
+                <div class="tip-card">
+                    <i class="fas fa-heart" style="color: #FF6B6B;"></i>
+                    <h4>Self-Care</h4>
+                    <p>Take time for yourself every day</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>🌸 Made with love for better menstrual health</p>
+            <p class="footer-small">© 2026 Period Calculator</p>
+        </footer>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="toast">
-        <i class="fas fa-check-circle"></i>
-        <span id="toastMessage">Success!</span>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- ============================================ -->
+    <!-- SCRIPTS -->
+    <!-- ============================================ -->
     <script src="script.js"></script>
 </body>
 </html>
