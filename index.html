@@ -1,1 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌸 Period Tracker - Your Wellness Companion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-flower"></i>
+                <span>PeriodTracker</span>
+            </div>
+            <div class="nav-links">
+                <button class="nav-btn active" data-tab="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </button>
+                <button class="nav-btn" data-tab="tracker">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Tracker</span>
+                </button>
+                <button class="nav-btn" data-tab="insights">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Insights</span>
+                </button>
+                <button class="nav-btn" data-tab="wellness">
+                    <i class="fas fa-heart"></i>
+                    <span>Wellness</span>
+                </button>
+                <button class="nav-btn" data-tab="profile">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </button>
+            </div>
+        </div>
+    </nav>
 
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <!-- Welcome Section -->
+            <div class="welcome-section">
+                <div class="welcome-text">
+                    <h1>Hello, 🌸</h1>
+                    <p>Your cycle day <span id="cycleDay">12</span> • <span id="phaseName">Ovulation</span></p>
+                </div>
+                <div class="quick-add">
+                    <button class="btn-primary" onclick="logPeriod()">
+                        <i class="fas fa-plus"></i> Log Period
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cycle Progress Ring -->
+            <div class="cycle-progress">
+                <div class="progress-ring-container">
+                    <div class="progress-ring">
+                        <div class="progress-ring-circle" id="cycleProgress"></div>
+                        <div class="progress-text">
+                            <span class="days-count" id="daysUntilPeriod">8</span>
+                            <span class="days-label">days until period</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cycle-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-calendar-day"></i>
+                        <span>Cycle Day</span>
+                        <strong id="currentCycleDay">12</strong>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Avg Cycle</span>
+                        <strong id="avgCycle">28</strong>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-baby"></i>
+                        <span>Fertility</span>
+                        <strong id="fertilityStatus">High</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar -->
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <button class="btn-icon" onclick="changeMonth(-1)"><i class="fas fa-chevron-left"></i></button>
+                    <h3 id="currentMonth">January 2026</h3>
+                    <button class="btn-icon" onclick="changeMonth(1)"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Calendar will be rendered by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Today's Tips -->
+            <div class="tips-section">
+                <h3><i class="fas fa-lightbulb"></i> Today's Wellness Tips</h3>
+                <div class="tips-carousel" id="tipsCarousel">
+                    <div class="tip-card">
+                        <i class="fas fa-leaf"></i>
+                        <p>Stay hydrated! Drink 8 glasses of water today.</p>
+                    </div>
+                    <div class="tip-card">
+                        <i class="fas fa-spa"></i>
+                        <p>Practice deep breathing for 5 minutes.</p>
+                    </div>
+                    <div class="tip-card">
+                        <i class="fas fa-walking"></i>
+                        <p>Take a 15-minute walk in nature.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tracker Tab -->
+        <div id="tracker" class="tab-content">
+            <h2><i class="fas fa-calendar-check"></i> Symptom Tracker</h2>
+            
+            <div class="symptom-grid" id="symptomGrid">
+                <!-- Symptoms rendered by JavaScript -->
+            </div>
+
+            <div class="mood-tracker">
+                <h3>How are you feeling?</h3>
+                <div class="mood-emojis" id="moodEmojis">
+                    <button class="mood-btn" data-mood="😊">😊</button>
+                    <button class="mood-btn" data-mood="😐">😐</button>
+                    <button class="mood-btn" data-mood="😢">😢</button>
+                    <button class="mood-btn" data-mood="😡">😡</button>
+                    <button class="mood-btn" data-mood="😴">😴</button>
+                </div>
+                <div class="mood-intensity">
+                    <label>Intensity: <span id="intensityLabel">3</span></label>
+                    <input type="range" min="1" max="5" value="3" id="intensitySlider">
+                </div>
+                <button class="btn-primary" onclick="saveDailyLog()">
+                    <i class="fas fa-save"></i> Save Today's Log
+                </button>
+            </div>
+        </div>
+
+        <!-- Insights Tab -->
+        <div id="insights" class="tab-content">
+            <h2><i class="fas fa-chart-line"></i> Cycle Insights</h2>
+            
+            <div class="insight-cards">
+                <div class="insight-card">
+                    <i class="fas fa-chart-bar"></i>
+                    <h4>Cycle Length</h4>
+                    <p id="cycleLengthInsight">28 days</p>
+                    <small>Last 3 months average</small>
+                </div>
+                <div class="insight-card">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h4>Next Period</h4>
+                    <p id="nextPeriodInsight">January 14, 2026</p>
+                    <small>8 days from now</small>
+                </div>
+                <div class="insight-card">
+                    <i class="fas fa-heartbeat"></i>
+                    <h4>Symptom Pattern</h4>
+                    <p id="symptomPattern">Mild cramps common</p>
+                    <small>Days 1-3 of cycle</small>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="cycleChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Wellness Tab -->
+        <div id="wellness" class="tab-content">
+            <h2><i class="fas fa-heart"></i> Wellness Hub</h2>
+            
+            <div class="wellness-grid">
+                <div class="wellness-card" onclick="startMeditation()">
+                    <i class="fas fa-spa"></i>
+                    <h4>Meditation</h4>
+                    <p>5-min guided session</p>
+                    <button class="btn-secondary">Start</button>
+                </div>
+                <div class="wellness-card">
+                    <i class="fas fa-apple-alt"></i>
+                    <h4>Nutrition</h4>
+                    <p>Cycle-friendly recipes</p>
+                    <button class="btn-secondary">View</button>
+                </div>
+                <div class="wellness-card">
+                    <i class="fas fa-dumbbell"></i>
+                    <h4>Exercise</h4>
+                    <p>Phase-specific workouts</p>
+                    <button class="btn-secondary">Browse</button>
+                </div>
+                <div class="wellness-card">
+                    <i class="fas fa-moon"></i>
+                    <h4>Sleep</h4>
+                    <p>Track sleep quality</p>
+                    <button class="btn-secondary">Log</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Tab -->
+        <div id="profile" class="tab-content">
+            <h2><i class="fas fa-user"></i> Profile Settings</h2>
+            
+            <div class="profile-card">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="profile-form">
+                    <div class="form-group">
+                        <label>Cycle Length (days)</label>
+                        <input type="number" id="cycleLength" value="28" min="21" max="35">
+                    </div>
+                    <div class="form-group">
+                        <label>Period Duration (days)</label>
+                        <input type="number" id="periodDuration" value="5" min="3" max="7">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Period Start</label>
+                        <input type="date" id="lastPeriodStart">
+                    </div>
+                    <button class="btn-primary" onclick="saveProfile()">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Success!</span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
